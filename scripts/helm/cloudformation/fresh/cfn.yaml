@@ -343,10 +343,22 @@ Resources:
 ##############
 # S3 bucket
 ##############
+# Because the name should be globally unique, we are generating a random number from the stack id.
   S3Bucket:
     Type: "AWS::S3::Bucket"
     Properties:
-      BucketName: "openreplay-inst-mobs"
+      BucketName: !Join
+      - "-"
+      - - "openreplay-mobs"
+        - !Select
+          - 0
+          - !Split
+            - "-"
+            - !Select
+              - 2
+              - !Split
+                - "/"
+                - !Ref "AWS::StackId"
       BucketEncryption: 
         ServerSideEncryptionConfiguration: 
         - 
@@ -375,7 +387,18 @@ Resources:
   S3Bucket2:
     Type: "AWS::S3::Bucket"
     Properties:
-      BucketName: "openreplay-inst-sessions-assets"
+      BucketName: !Join
+      - "-"
+      - - "openreplay-sessions-assets"
+        - !Select
+          - 0
+          - !Split
+            - "-"
+            - !Select
+              - 2
+              - !Split
+                - "/"
+                - !Ref "AWS::StackId"
       LifecycleConfiguration: 
         Rules: 
         - 
@@ -397,12 +420,34 @@ Resources:
   S3Bucket3:
     Type: "AWS::S3::Bucket"
     Properties:
-      BucketName: "openreplay-inst-static"
+      BucketName: !Join
+      - "-"
+      - - "openreplay-static"
+        - !Select
+          - 0
+          - !Split
+            - "-"
+            - !Select
+              - 2
+              - !Split
+                - "/"
+                - !Ref "AWS::StackId"
 
   S3Bucket4:
     Type: "AWS::S3::Bucket"
     Properties:
-      BucketName: "openreplay-inst-sourcemaps"
+      BucketName: !Join
+      - "-"
+      - - "openreplay-sourcemaps"
+        - !Select
+          - 0
+          - !Split
+            - "-"
+            - !Select
+              - 2
+              - !Split
+                - "/"
+                - !Ref "AWS::StackId"
       BucketEncryption: 
         ServerSideEncryptionConfiguration: 
         - 
