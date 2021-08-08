@@ -119,6 +119,10 @@ Resources:
       CidrBlock: "10.0.1.0/24"
       VpcId: !Ref EC2VPC
       MapPublicIpOnLaunch: false
+      Tags: 
+      - 
+        Key: "Name"
+        Value: !Sub "${ECSCluster}/Private"
 
   EC2Subnet2:
     Type: "AWS::EC2::Subnet"
@@ -156,13 +160,6 @@ Resources:
 
   EC2InternetGateway:
     Type: "AWS::EC2::InternetGateway"
-
-  EC2Route:
-    Type: "AWS::EC2::Route"
-    Properties:
-      DestinationCidrBlock: "0.0.0.0/0"
-      GatewayId: !Ref EC2InternetGateway
-      RouteTableId: !Ref EC2RouteTable2
 
   EC2SecurityGroup:
     Type: "AWS::EC2::SecurityGroup"
@@ -213,6 +210,32 @@ Resources:
         Order: 1
         TargetGroupArn: !Ref ElasticLoadBalancingV2TargetGroup
         Type: "forward"
+
+  EC2SubnetRouteTableAssociation:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref EC2RouteTable
+      SubnetId: !Ref EC2Subnet
+
+  EC2SubnetRouteTableAssociation2:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref EC2RouteTable
+      SubnetId: !Ref EC2Subnet2
+
+  EC2Route:
+    Type: "AWS::EC2::Route"
+    Properties:
+      DestinationCidrBlock: "0.0.0.0/0"
+      GatewayId: !Ref EC2InternetGateway
+      RouteTableId: !Ref EC2RouteTable
+
+  EC2Route2:
+    Type: "AWS::EC2::Route"
+    Properties:
+      DestinationCidrBlock: "0.0.0.0/0"
+      GatewayId: !Ref EC2InternetGateway
+      RouteTableId: !Ref EC2RouteTable2
 
   ECSRole:
     Type: "AWS::IAM::Role"
