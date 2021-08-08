@@ -111,6 +111,10 @@ Resources:
       EnableDnsSupport: true
       EnableDnsHostnames: true
       InstanceTenancy: "default"
+      Tags:
+        - 
+          Key: "Name"
+          Value: "OpenReplay"
 
   EC2Subnet:
     Type: "AWS::EC2::Subnet"
