@@ -313,28 +313,29 @@ Resources:
       DBParameterGroupName: "default.postgres13"
       OptionGroupName: "default:postgres-13"
 
-  RedisSubnetGroup:
-    Type: "AWS::RDS::DBSubnetGroup"
+  ElastiCacheSubnetGroup:
+    Type: "AWS::ElastiCache::SubnetGroup"
     Properties:
-      DBSubnetGroupDescription: "Created from the Redis Management Console"
-      DBSubnetGroupName: "openreplayRedisSubnetGroup"
+      Description: "Created using openreplay cloudformation."
+      CacheSubnetGroupName: "openreplayRedisSubnetGroup"
       SubnetIds: 
       - !Ref EC2Subnet
       - !Ref EC2Subnet2
-  ElastiCacheCacheCluster:
+
+  ElastiCacheCluster:
     Type: "AWS::ElastiCache::CacheCluster"
     Properties:
       CacheNodeType: "cache.t2.micro"
       Engine: "redis"
-      EngineVersion: "6.0.5"
+      EngineVersion: "6.x"
       NumCacheNodes: 1
       PreferredAvailabilityZone: !Sub "${AWS::Region}b"
       PreferredMaintenanceWindow: "sat:05:30-sat:06:30"
       CacheParameterGroupName: "default.redis6.x"
-      CacheSubnetGroupName: "openreplay-redis"
+      CacheSubnetGroupName: !Ref ElastiCacheSubnetGroup
       AutoMinorVersionUpgrade: true
       VpcSecurityGroupIds: 
-      - !Ref RedisSubnetGroup
+      - !Ref EC2SecurityGroup
       SnapshotRetentionLimit: 1
       SnapshotWindow: "02:00-03:00"
       ClusterName: "openreplay-redis-001"
@@ -345,7 +346,7 @@ Resources:
   S3Bucket:
     Type: "AWS::S3::Bucket"
     Properties:
-      BucketName: "openreplay-mobs"
+      BucketName: "openreplay-inst-mobs"
       BucketEncryption: 
         ServerSideEncryptionConfiguration: 
         - 
@@ -374,7 +375,7 @@ Resources:
   S3Bucket2:
     Type: "AWS::S3::Bucket"
     Properties:
-      BucketName: "openreplay-sessions-assets"
+      BucketName: "openreplay-inst-sessions-assets"
       LifecycleConfiguration: 
         Rules: 
         - 
@@ -396,12 +397,12 @@ Resources:
   S3Bucket3:
     Type: "AWS::S3::Bucket"
     Properties:
-      BucketName: "openreplay-static"
+      BucketName: "openreplay-inst-static"
 
   S3Bucket4:
     Type: "AWS::S3::Bucket"
     Properties:
-      BucketName: "openreplay-sourcemaps"
+      BucketName: "openreplay-inst-sourcemaps"
       BucketEncryption: 
         ServerSideEncryptionConfiguration: 
         - 
