@@ -312,3 +312,29 @@ Resources:
       MaxAllocatedStorage: 1000
       DBParameterGroupName: "default.postgres13"
       OptionGroupName: "default:postgres-13"
+
+  RedisSubnetGroup:
+    Type: "AWS::RDS::DBSubnetGroup"
+    Properties:
+      DBSubnetGroupDescription: "Created from the Redis Management Console"
+      DBSubnetGroupName: "openreplayRedisSubnetGroup"
+      SubnetIds: 
+      - !Ref EC2Subnet
+      - !Ref EC2Subnet2
+  ElastiCacheCacheCluster:
+    Type: "AWS::ElastiCache::CacheCluster"
+    Properties:
+      CacheNodeType: "cache.t2.micro"
+      Engine: "redis"
+      EngineVersion: "6.0.5"
+      NumCacheNodes: 1
+      PreferredAvailabilityZone: !Sub "${AWS::Region}b"
+      PreferredMaintenanceWindow: "sat:05:30-sat:06:30"
+      CacheParameterGroupName: "default.redis6.x"
+      CacheSubnetGroupName: "openreplay-redis"
+      AutoMinorVersionUpgrade: true
+      VpcSecurityGroupIds: 
+      - !Ref RedisSubnetGroup
+      SnapshotRetentionLimit: 1
+      SnapshotWindow: "02:00-03:00"
+      ClusterName: "openreplay-redis-001"
