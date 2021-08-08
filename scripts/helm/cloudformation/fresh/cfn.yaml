@@ -338,3 +338,84 @@ Resources:
       SnapshotRetentionLimit: 1
       SnapshotWindow: "02:00-03:00"
       ClusterName: "openreplay-redis-001"
+
+##############
+# S3 bucket
+##############
+  S3Bucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: "openreplay-mobs"
+      BucketEncryption: 
+        ServerSideEncryptionConfiguration: 
+        - 
+          ServerSideEncryptionByDefault: 
+            SSEAlgorithm: "AES256"
+          BucketKeyEnabled: false
+      LifecycleConfiguration: 
+        Rules: 
+        - 
+          AbortIncompleteMultipartUpload: 
+            DaysAfterInitiation: 7
+          Id: "remove30"
+          Status: "Enabled"
+          ExpirationInDays: 30
+      CorsConfiguration: 
+        CorsRules: 
+        - 
+          AllowedHeaders: 
+          - "Authorization"
+          AllowedMethods: 
+          - "GET"
+          - "HEAD"
+          AllowedOrigins: 
+          - "*"
+
+  S3Bucket2:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: "openreplay-sessions-assets"
+      LifecycleConfiguration: 
+        Rules: 
+        - 
+          AbortIncompleteMultipartUpload: 
+            DaysAfterInitiation: 1
+          Id: "remove30"
+          Status: "Enabled"
+          ExpirationInDays: 30
+      CorsConfiguration: 
+        CorsRules: 
+        - 
+          AllowedHeaders: 
+          - "*"
+          AllowedMethods: 
+          - "GET"
+          AllowedOrigins: 
+          - "*"
+
+  S3Bucket3:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: "openreplay-static"
+
+  S3Bucket4:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: "openreplay-sourcemaps"
+      BucketEncryption: 
+        ServerSideEncryptionConfiguration: 
+        - 
+          ServerSideEncryptionByDefault: 
+            SSEAlgorithm: "aws:kms"
+            KMSMasterKeyID: !Sub "arn:aws:kms:eu-central-1:${AWS::AccountId}:key/fb1c3805-1c52-48af-8ae6-c06b29019ef1"
+          BucketKeyEnabled: false
+      CorsConfiguration: 
+        CorsRules: 
+        - 
+          AllowedHeaders: 
+          - "Authorization"
+          AllowedMethods: 
+          - "GET"
+          - "HEAD"
+          AllowedOrigins: 
+          - "*"
