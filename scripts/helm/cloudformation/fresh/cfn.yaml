@@ -465,3 +465,24 @@ Resources:
           - "HEAD"
           AllowedOrigins: 
           - "*"
+  S3Bucket5:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: !Join
+      - "-"
+      - - "asayer-sessions-mobile-assets"
+        - !Select
+          - 0
+          - !Split
+            - "-"
+            - !Select
+              - 2
+              - !Split
+                - "/"
+                - !Ref "AWS::StackId"
+      BucketEncryption: 
+        ServerSideEncryptionConfiguration: 
+        - 
+          ServerSideEncryptionByDefault: 
+            SSEAlgorithm: "AES256"
+          BucketKeyEnabled: false
