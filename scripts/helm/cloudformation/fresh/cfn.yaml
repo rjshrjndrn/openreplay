@@ -8,6 +8,11 @@ Metadata:
         Parameters:
           - RDSMasterUserPassword
           - RDSMasterUser
+      - Label:
+          default: S3 Configuration
+        Parameters:
+          - AWSAccessKey
+          - AWSSecretKey
 Parameters:
   RDSMasterUserPassword:
     Description: Master user password for RDS database
@@ -18,8 +23,35 @@ Parameters:
     Description: Master user for RDS database
     Type: String
     Default: openreplay
+  AWSAccessKey:
+    Description: Access Key to access s3
+    Type: String
+    Default: ""
+  AWSSecretKey:
+    Description: Secret Key to access s3
+    Type: String
+    NoEcho: true
+    Default: ""
+
 Description: ""
 Resources:
+  ElasticLoadBalancingV2TargetGroupWorkers:
+    Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
+    Properties:
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: "/"
+      Port: 80
+      Protocol: "HTTP"
+      HealthCheckPort: "traffic-port"
+      HealthCheckProtocol: "HTTP"
+      HealthCheckTimeoutSeconds: 5
+      UnhealthyThresholdCount: 2
+      TargetType: "ip"
+      Matcher: 
+        HttpCode: "200"
+      HealthyThresholdCount: 5
+      VpcId: !Ref EC2VPC
+      Name: "ecs-openre-woker"
   ElasticLoadBalancingV2TargetGroup:
     Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
     Properties:
@@ -50,6 +82,12 @@ Resources:
       - "FARGATE_SPOT"
       - "FARGATE"
 
+  ECSLogger:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: OpenReplayECSLogs
+      RetentionInDays: 7
+
   ECSTaskDefinition:
     Type: "AWS::ECS::TaskDefinition"
     Properties:
@@ -67,7 +105,7 @@ Resources:
         LogConfiguration: 
           LogDriver: "awslogs"
           Options: 
-            awslogs-group: "/ecs/nginx"
+            awslogs-group: !Ref ECSLogger
             awslogs-region: !Ref AWS::Region
             awslogs-stream-prefix: "ecs"
         Name: "nginx"
@@ -89,28 +127,150 @@ Resources:
     Type: "AWS::ECS::Service"
     DependsOn: 
       - ElasticLoadBalancingV2LoadBalancer
-      - ECSTaskDefinition
       - ECSRole
     Properties:
       ServiceName: "nginx"
       Cluster: !GetAtt ECSCluster.Arn
       LoadBalancers: 
       - 
-        # TargetGroupArn: !Sub "arn:aws:elasticloadbalancing:${AWS::Region}:${AWS::AccountId}:targetgroup/ecs-openre-nginx/91a1080be324db0d"
         TargetGroupArn: !Ref ElasticLoadBalancingV2TargetGroup
         ContainerName: "nginx"
         ContainerPort: 80
       DesiredCount: 1
       LaunchType: "FARGATE"
       PlatformVersion: "LATEST"
-      TaskDefinition: !Sub "arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:task-definition/nginx"
+      TaskDefinition: !Ref ECSTaskDefinition
       DeploymentConfiguration: 
         MaximumPercent: 200
         MinimumHealthyPercent: 100
         DeploymentCircuitBreaker: 
           Enable: false
           Rollback: false
-      # Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS"
+      NetworkConfiguration: 
+        AwsvpcConfiguration: 
+          AssignPublicIp: "ENABLED"
+          SecurityGroups: 
+          - !Ref EC2SecurityGroup
+          Subnets: 
+          - !Ref EC2Subnet2
+          - !Ref EC2Subnet
+      HealthCheckGracePeriodSeconds: 0
+      SchedulingStrategy: "REPLICA"
+
+  WorkerECSTaskDefinition:
+    Type: "AWS::ECS::TaskDefinition"
+    Properties:
+      ContainerDefinitions: 
+      - 
+        Environment: 
+        - 
+          Name: "S3_BUCKET_ASSETS"
+          Value: !Ref S3Bucket2
+        - 
+          Name: "GROUP_CACHE"
+          Value: "cache-all"
+        - 
+          Name: "AWS_REGION"
+          Value: !Sub "${AWS::Region}"
+        - 
+          Name: "GROUP_DB"
+          Value: "db-all"
+        - 
+          Name: "GROUP_STORAGE"
+          Value: "storage-all"
+        - 
+          Name: "TOKEN_SECRET"
+          Value: "whatewer"
+        - 
+          Name: "S3_BUCKET_WEB"
+          Value: !Ref S3Bucket
+        - 
+          Name: "GROUP_ENDER"
+          Value: "ender-all"
+        - 
+          Name: "MOBILE_IMAGES_BUCKET"
+          Value: !Ref S3Bucket5
+        - 
+          Name: "GROUP_SINK"
+          Value: "sink-all"
+        - 
+          Name: "REDIS_STRING"
+          Value: !GetAtt ElastiCacheCluster.RedisEndpoint.Address
+
+        # TODO: change to chalice:8000/alerts/notifications
+        - 
+          Name: "ALERT_NOTIFICATION_STRING"
+          Value: "REPLACEME"
+        - 
+          Name: "ASSETS_BUCKET"
+          Value: "openreplay-sessions-assets"
+        - 
+          Name: "ASSETS_ORIGIN"
+          # Original value: https://assets-staging.asayer.io
+          Value: "/staging/s3/buckets/assets_origin"
+        - 
+          Name: "AWS_ACCESS_KEY_ID"
+          Value: !Ref AWSAccessKey
+        - 
+          Name: "AWS_SECRET_ACCESS_KEY"
+          Value: !Ref AWSSecretKey
+        - 
+          Name: "POSTGRES_STRING"
+          Value: !GetAtt RDSDBInstance.Endpoint.Address
+        Essential: true
+        # TODO: Change the address to public all image
+        Image: "nginx"
+        MountPoints: 
+        - 
+          SourceVolume: "string"
+          ContainerPath: "/filestorage"
+        Name: "nginx"
+        PortMappings: 
+        - 
+          ContainerPort: 80
+          HostPort: 80
+          Protocol: "tcp"
+        LogConfiguration: 
+          LogDriver: "awslogs"
+          Options: 
+            awslogs-group: !Ref ECSLogger
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: "openreplayworker"
+      Family: "WorkerECSService"
+      ExecutionRoleArn: !GetAtt ECSRole.Arn
+      NetworkMode: "awsvpc"
+      Volumes: 
+      - 
+        Name: "string"
+        Host: {}
+      RequiresCompatibilities: 
+      - "FARGATE"
+      Cpu: "2048"
+      Memory: "4096"
+
+  WorkerECSService:
+    Type: "AWS::ECS::Service"
+    DependsOn:
+      - ElasticLoadBalancingV2LoadBalancer
+      - ECSRole
+    Properties:
+      ServiceName: "altogether"
+      Cluster: !GetAtt ECSCluster.Arn
+      LoadBalancers: 
+      - 
+        TargetGroupArn: !Ref ElasticLoadBalancingV2TargetGroup
+        ContainerName: "nginx"
+        ContainerPort: 80
+      DesiredCount: 1
+      LaunchType: "FARGATE"
+      PlatformVersion: "LATEST"
+      TaskDefinition: !Ref WorkerECSTaskDefinition
+      DeploymentConfiguration: 
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+        DeploymentCircuitBreaker: 
+          Enable: false
+          Rollback: false
       NetworkConfiguration: 
         AwsvpcConfiguration: 
           AssignPublicIp: "ENABLED"
@@ -452,8 +612,7 @@ Resources:
         ServerSideEncryptionConfiguration: 
         - 
           ServerSideEncryptionByDefault: 
-            SSEAlgorithm: "aws:kms"
-            KMSMasterKeyID: !Sub "arn:aws:kms:eu-central-1:${AWS::AccountId}:key/fb1c3805-1c52-48af-8ae6-c06b29019ef1"
+            SSEAlgorithm: "AES256"
           BucketKeyEnabled: false
       CorsConfiguration: 
         CorsRules: 
