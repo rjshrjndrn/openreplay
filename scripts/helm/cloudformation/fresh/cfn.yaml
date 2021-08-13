@@ -195,7 +195,7 @@ Resources:
           Value: "sink-all"
         - 
           Name: "REDIS_STRING"
-          Value: !GetAtt ElastiCacheCluster.RedisEndpoint.Address
+          Value: !Sub "${ElastiCacheCluster.RedisEndpoint.Address}:6379"
 
         # TODO: change to chalice:8000/alerts/notifications
         - 
@@ -216,10 +216,11 @@ Resources:
           Value: !Ref AWSSecretKey
         - 
           Name: "POSTGRES_STRING"
-          Value: !GetAtt RDSDBInstance.Endpoint.Address
+      # AvailabilityZone: !Sub "${AWS::Region}b"
+          Value: !Sub "postgres://${RDSMasterUser}:${RDSMasterUserPassword}@${RDSDBInstance.Endpoint.Address}/app"
         Essential: true
         # TODO: Change the address to public all image
-        Image: "nginx"
+        Image: "rg.fr-par.scw.cloud/foss/altogether-workers"
         MountPoints: 
         - 
           SourceVolume: "string"
