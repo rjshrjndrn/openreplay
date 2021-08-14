@@ -863,6 +863,7 @@ Resources:
   S3Bucket2:
     Type: "AWS::S3::Bucket"
     Properties:
+      AccessControl: PublicRead
       BucketName: !Join
       - "-"
       - - "openreplay-sessions-assets"
@@ -896,6 +897,7 @@ Resources:
   S3Bucket3:
     Type: "AWS::S3::Bucket"
     Properties:
+      AccessControl: PublicRead
       BucketName: !Join
       - "-"
       - - "openreplay-static"
