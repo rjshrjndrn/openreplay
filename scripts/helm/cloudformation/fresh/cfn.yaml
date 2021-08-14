@@ -1,3 +1,4 @@
+# vim: set foldmethod=indent:
 AWSTemplateFormatVersion: "2010-09-09"
 Metadata:
   Generator: "former2"
