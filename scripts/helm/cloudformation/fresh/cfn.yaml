@@ -153,13 +153,13 @@ Resources:
       HealthCheckPath: "/"
       Port: 8000
       Protocol: "HTTP"
-      HealthCheckPort: "traffic-port"
+      HealthCheckPort: "8000"
       HealthCheckProtocol: "HTTP"
       HealthCheckTimeoutSeconds: 5
       UnhealthyThresholdCount: 2
       TargetType: "ip"
       Matcher: 
-        HttpCode: "200"
+        HttpCode: "403"
       HealthyThresholdCount: 5
       VpcId: !Ref EC2VPC
       Name: "ecs-openre-api"
