@@ -898,6 +898,9 @@ Resources:
   S3Bucket3:
     Type: "AWS::S3::Bucket"
     Properties:
+      WebsiteConfiguration: 
+        IndexDocument: "index.html"
+        ErrorDocument: "index.html"
       AccessControl: PublicRead
       BucketName: !Join
       - "-"
