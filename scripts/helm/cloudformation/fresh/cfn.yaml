@@ -10,11 +10,6 @@ Metadata:
           - RDSMasterUserPassword
           - RDSMasterUser
       - Label:
-          default: S3 Configuration
-        Parameters:
-          - AWSAccessKey
-          - AWSSecretKey
-      - Label:
           default: Api configuration
         Parameters:
           - EmailHost
@@ -39,15 +34,6 @@ Parameters:
     Description: Master user for RDS database
     Type: String
     Default: openreplay
-  AWSAccessKey:
-    Description: Access Key to access s3
-    Type: String
-    Default: ""
-  AWSSecretKey:
-    Description: Secret Key to access s3
-    Type: String
-    NoEcho: true
-    Default: ""
   EmailHost:
     Description: SMTP host for sending mails
     Type: String
@@ -103,7 +89,7 @@ Resources:
 ##############
 # LoadBalancer
 ##############
-  ElasticLoadBalancingV2LoadBalancer:
+  PublicLoadBalancer:
     Type: "AWS::ElasticLoadBalancingV2::LoadBalancer"
     Properties:
       Name: !Sub "${ECSCluster}-frontend"
@@ -115,23 +101,23 @@ Resources:
       SecurityGroups: 
       - !Ref EC2SecurityGroup
       IpAddressType: "ipv4"
-  ElasticLoadBalancingV2Listener:
+  PublicLBListener:
     Type: "AWS::ElasticLoadBalancingV2::Listener"
     Properties:
-      LoadBalancerArn: !Ref ElasticLoadBalancingV2LoadBalancer
+      LoadBalancerArn: !Ref PublicLoadBalancer
       Port: 80
       Protocol: "HTTP"
       DefaultActions: 
       - 
         Order: 1
-        TargetGroupArn: !Ref ElasticLoadBalancingV2TargetGroupFrontend
+        TargetGroupArn: !Ref PublicLBTargetGroupFrontend
         Type: "forward"
 
-  ElasticLoadBalancingV2ListenerRuleApi:
+  PublicLBListenerRuleApi:
     Type: "AWS::ElasticLoadBalancingV2::ListenerRule"
     Properties:
       Priority: 1
-      ListenerArn: !Ref ElasticLoadBalancingV2Listener
+      ListenerArn: !Ref PublicLBListener
       Conditions: 
       - 
         Field: "path-pattern"
@@ -140,16 +126,16 @@ Resources:
       Actions: 
       - 
         Type: "forward"
-        TargetGroupArn: !Ref ElasticLoadBalancingV2TargetGroupApi
+        TargetGroupArn: !Ref PublicLBTargetGroupApi
         Order: 1
         ForwardConfig: 
           TargetGroups: 
           - 
-            TargetGroupArn: !Ref ElasticLoadBalancingV2TargetGroupApi
+            TargetGroupArn: !Ref PublicLBTargetGroupApi
             Weight: 1
           TargetGroupStickinessConfig: 
             Enabled: false
-  ElasticLoadBalancingV2TargetGroupApi:
+  PublicLBTargetGroupApi:
     Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
     Properties:
       HealthCheckIntervalSeconds: 30
@@ -167,11 +153,11 @@ Resources:
       VpcId: !Ref EC2VPC
       Name: "ecs-openre-api"
 
-  ElasticLoadBalancingV2ListenerRuleAssist:
+  PublicLBListenerRuleAssist:
     Type: "AWS::ElasticLoadBalancingV2::ListenerRule"
     Properties:
       Priority: 2
-      ListenerArn: !Ref ElasticLoadBalancingV2Listener
+      ListenerArn: !Ref PublicLBListener
       Conditions: 
       - 
         Field: "path-pattern"
@@ -180,16 +166,16 @@ Resources:
       Actions: 
       - 
         Type: "forward"
-        TargetGroupArn: !Ref ElasticLoadBalancingV2TargetGroupAssist
+        TargetGroupArn: !Ref PublicLBTargetGroupAssist
         Order: 1
         ForwardConfig: 
           TargetGroups: 
           - 
-            TargetGroupArn: !Ref ElasticLoadBalancingV2TargetGroupAssist
+            TargetGroupArn: !Ref PublicLBTargetGroupAssist
             Weight: 1
           TargetGroupStickinessConfig: 
             Enabled: false
-  ElasticLoadBalancingV2TargetGroupAssist:
+  PublicLBTargetGroupAssist:
     Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
     Properties:
       HealthCheckIntervalSeconds: 30
@@ -207,11 +193,11 @@ Resources:
       VpcId: !Ref EC2VPC
       Name: "ecs-openre-assist"
 
-  ElasticLoadBalancingV2ListenerRuleWorker:
+  PublicLBListenerRuleWorker:
     Type: "AWS::ElasticLoadBalancingV2::ListenerRule"
     Properties:
       Priority: 3
-      ListenerArn: !Ref ElasticLoadBalancingV2Listener
+      ListenerArn: !Ref PublicLBListener
       Conditions: 
       - 
         Field: "path-pattern"
@@ -220,16 +206,16 @@ Resources:
       Actions: 
       - 
         Type: "forward"
-        TargetGroupArn: !Ref ElasticLoadBalancingV2TargetGroupWorkers
+        TargetGroupArn: !Ref PublicLBTargetGroupWorkers
         Order: 1
         ForwardConfig: 
           TargetGroups: 
           - 
-            TargetGroupArn: !Ref ElasticLoadBalancingV2TargetGroupWorkers
+            TargetGroupArn: !Ref PublicLBTargetGroupWorkers
             Weight: 1
           TargetGroupStickinessConfig: 
             Enabled: false
-  ElasticLoadBalancingV2TargetGroupWorkers:
+  PublicLBTargetGroupWorkers:
     Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
     Properties:
       HealthCheckIntervalSeconds: 30
@@ -247,10 +233,10 @@ Resources:
       VpcId: !Ref EC2VPC
       Name: "ecs-openre-woker"
 
-  ElasticLoadBalancingV2TargetGroupFrontend:
+  PublicLBTargetGroupFrontend:
     Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
     DependsOn:
-      - ElasticLoadBalancingV2LoadBalancer
+      - PublicLoadBalancer
     Properties:
       HealthCheckIntervalSeconds: 30
       HealthCheckPath: "/"
@@ -451,18 +437,18 @@ Resources:
   ApiECSService:
     Type: "AWS::ECS::Service"
     DependsOn:
-      - ElasticLoadBalancingV2LoadBalancer
+      - PublicLoadBalancer
       - ECSRole
     Properties:
       ServiceName: "altogether-api"
       Cluster: !GetAtt ECSCluster.Arn
       LoadBalancers: 
       - 
-        TargetGroupArn: !Ref ElasticLoadBalancingV2TargetGroupApi
+        TargetGroupArn: !Ref PublicLBTargetGroupApi
         ContainerName: "api"
         ContainerPort: 8000
       - 
-        TargetGroupArn: !Ref ElasticLoadBalancingV2TargetGroupAssist
+        TargetGroupArn: !Ref PublicLBTargetGroupAssist
         ContainerName: "api"
         ContainerPort: 9000
       DesiredCount: 1
@@ -539,10 +525,10 @@ Resources:
           Value: "/staging/s3/buckets/assets_origin"
         - 
           Name: "AWS_ACCESS_KEY_ID"
-          Value: !Ref AWSAccessKey
+          Value: !Ref S3AccessUserKey
         - 
           Name: "AWS_SECRET_ACCESS_KEY"
-          Value: !Ref AWSSecretKey
+          Value: !GetAtt S3AccessUserKey.SecretAccessKey
         - 
           Name: "POSTGRES_STRING"
       # AvailabilityZone: !Sub "${AWS::Region}b"
@@ -581,14 +567,14 @@ Resources:
   WorkerECSService:
     Type: "AWS::ECS::Service"
     DependsOn:
-      - ElasticLoadBalancingV2LoadBalancer
+      - PublicLoadBalancer
       - ECSRole
     Properties:
       ServiceName: "altogether"
       Cluster: !GetAtt ECSCluster.Arn
       LoadBalancers: 
       - 
-        TargetGroupArn: !Ref ElasticLoadBalancingV2TargetGroupWorkers
+        TargetGroupArn: !Ref PublicLBTargetGroupWorkers
         ContainerName: "nginx"
         ContainerPort: 80
       DesiredCount: 1
@@ -647,15 +633,15 @@ Resources:
   FrontendECSService:
     Type: "AWS::ECS::Service"
     DependsOn:
-      - ElasticLoadBalancingV2LoadBalancer
-      - ElasticLoadBalancingV2Listener
+      - PublicLoadBalancer
+      - PublicLBListener
       - ECSRole
     Properties:
       ServiceName: "frontend"
       Cluster: !GetAtt ECSCluster.Arn
       LoadBalancers: 
       - 
-        TargetGroupArn: !Ref ElasticLoadBalancingV2TargetGroupFrontend
+        TargetGroupArn: !Ref PublicLBTargetGroupFrontend
         ContainerName: "frontend"
         ContainerPort: 80
       DesiredCount: 1
@@ -808,6 +794,43 @@ Resources:
       ManagedPolicyArns: 
       - "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
       - "arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess"
+##############
+# IAM User
+##############
+  S3AccessUser:
+    Type: AWS::IAM::User
+    Properties:
+      Path: "/"
+      # LoginProfile:
+      #   Password: !Ref S3UserPassword
+      Policies:
+      - PolicyName: giveaccesstoOpenReplayS3Only
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - s3:*
+            Resource:
+            - !GetAtt S3Bucket.Arn
+            - !GetAtt S3Bucket2.Arn
+            - !GetAtt S3Bucket3.Arn
+            - !GetAtt S3Bucket4.Arn
+            - !GetAtt S3Bucket5.Arn
+          - Effect: Deny
+            Action:
+            - s3:*
+            NotResource:
+            - !GetAtt S3Bucket.Arn
+            - !GetAtt S3Bucket2.Arn
+            - !GetAtt S3Bucket3.Arn
+            - !GetAtt S3Bucket4.Arn
+            - !GetAtt S3Bucket5.Arn
+  S3AccessUserKey:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      UserName:
+        !Ref S3AccessUser
 
 ###############
 ## Databases
