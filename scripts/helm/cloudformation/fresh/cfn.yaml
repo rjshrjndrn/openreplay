@@ -164,10 +164,50 @@ Resources:
       VpcId: !Ref EC2VPC
       Name: "ecs-openre-api"
 
-  ElasticLoadBalancingV2ListenerRuleWorker:
+  ElasticLoadBalancingV2ListenerRuleAssist:
     Type: "AWS::ElasticLoadBalancingV2::ListenerRule"
     Properties:
       Priority: 2
+      ListenerArn: !Ref ElasticLoadBalancingV2Listener
+      Conditions: 
+      - 
+        Field: "path-pattern"
+        Values: 
+        - "/assist"
+      Actions: 
+      - 
+        Type: "forward"
+        TargetGroupArn: !Ref ElasticLoadBalancingV2TargetGroupAssist
+        Order: 1
+        ForwardConfig: 
+          TargetGroups: 
+          - 
+            TargetGroupArn: !Ref ElasticLoadBalancingV2TargetGroupAssist
+            Weight: 1
+          TargetGroupStickinessConfig: 
+            Enabled: false
+  ElasticLoadBalancingV2TargetGroupAssist:
+    Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
+    Properties:
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: "/"
+      Port: 9000
+      Protocol: "HTTP"
+      HealthCheckPort: "9000"
+      HealthCheckProtocol: "HTTP"
+      HealthCheckTimeoutSeconds: 5
+      UnhealthyThresholdCount: 2
+      TargetType: "ip"
+      Matcher: 
+        HttpCode: "200"
+      HealthyThresholdCount: 5
+      VpcId: !Ref EC2VPC
+      Name: "ecs-openre-assist"
+
+  ElasticLoadBalancingV2ListenerRuleWorker:
+    Type: "AWS::ElasticLoadBalancingV2::ListenerRule"
+    Properties:
+      Priority: 3
       ListenerArn: !Ref ElasticLoadBalancingV2Listener
       Conditions: 
       - 
@@ -206,6 +246,8 @@ Resources:
 
   ElasticLoadBalancingV2TargetGroupFrontend:
     Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
+    DependsOn:
+      - ElasticLoadBalancingV2LoadBalancer
     Properties:
       HealthCheckIntervalSeconds: 30
       HealthCheckPath: "/"
@@ -239,41 +281,6 @@ Resources:
     Properties: 
       LogGroupName: OpenReplayECSLogs
       RetentionInDays: 7
-
-  ECSTaskDefinition:
-    Type: "AWS::ECS::TaskDefinition"
-    Properties:
-      ContainerDefinitions: 
-      - 
-        Environment: 
-        - 
-          Name: "name"
-          Value: "nginx"
-        - 
-          Name: !Ref ECSCluster
-          Value: "nginx"
-        Essential: true
-        Image: "nginx"
-        LogConfiguration: 
-          LogDriver: "awslogs"
-          Options: 
-            awslogs-group: !Ref ECSLogger
-            awslogs-region: !Ref AWS::Region
-            awslogs-stream-prefix: "ecs"
-        Name: "nginx"
-        PortMappings: 
-        - 
-          ContainerPort: 80
-          HostPort: 80
-          Protocol: "tcp"
-      Family: "nginx"
-      # ExecutionRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/ecsTaskExecutionRole"
-      ExecutionRoleArn: !GetAtt ECSRole.Arn
-      NetworkMode: "awsvpc"
-      RequiresCompatibilities: 
-      - "FARGATE"
-      Cpu: "1024"
-      Memory: "2048"
 
   ApiECSTaskDefinition:
     Type: "AWS::ECS::TaskDefinition"
@@ -414,8 +421,12 @@ Resources:
         Name: "api"
         PortMappings: 
         - 
-          ContainerPort: 80
-          HostPort: 80
+          ContainerPort: 8000
+          HostPort: 8000
+          Protocol: "tcp"
+        - 
+          ContainerPort: 9000
+          HostPort: 9000
           Protocol: "tcp"
         LogConfiguration: 
           LogDriver: "awslogs"
@@ -428,8 +439,8 @@ Resources:
       NetworkMode: "awsvpc"
       RequiresCompatibilities: 
       - "FARGATE"
-      Cpu: "2048"
-      Memory: "4096"
+      Cpu: "1024"
+      Memory: "2048"
 
   ApiECSService:
     Type: "AWS::ECS::Service"
@@ -443,7 +454,11 @@ Resources:
       - 
         TargetGroupArn: !Ref ElasticLoadBalancingV2TargetGroupApi
         ContainerName: "api"
-        ContainerPort: 80
+        ContainerPort: 8000
+      - 
+        TargetGroupArn: !Ref ElasticLoadBalancingV2TargetGroupAssist
+        ContainerName: "api"
+        ContainerPort: 9000
       DesiredCount: 1
       LaunchType: "FARGATE"
       PlatformVersion: "LATEST"
@@ -627,6 +642,7 @@ Resources:
     Type: "AWS::ECS::Service"
     DependsOn:
       - ElasticLoadBalancingV2LoadBalancer
+      - ElasticLoadBalancingV2Listener
       - ECSRole
     Properties:
       ServiceName: "frontend"
