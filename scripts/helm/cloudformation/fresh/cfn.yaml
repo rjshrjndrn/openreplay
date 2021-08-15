@@ -100,6 +100,9 @@ Parameters:
 
 Description: ""
 Resources:
+##############
+# LoadBalancer
+##############
   ElasticLoadBalancingV2LoadBalancer:
     Type: "AWS::ElasticLoadBalancingV2::LoadBalancer"
     Properties:
@@ -264,6 +267,9 @@ Resources:
       VpcId: !Ref EC2VPC
       Name: "ecs-openre-frontend"
 
+##############
+# ECS
+##############
   ECSCluster:
     Type: "AWS::ECS::Cluster"
     Properties:
@@ -673,6 +679,10 @@ Resources:
       HealthCheckGracePeriodSeconds: 0
       SchedulingStrategy: "REPLICA"
 
+
+##############
+# Network
+##############
   EC2VPC:
     Type: "AWS::EC2::VPC"
     Properties:
@@ -785,6 +795,9 @@ Resources:
       GatewayId: !Ref EC2InternetGateway
       RouteTableId: !Ref EC2RouteTable2
 
+##############
+# IAM Role
+##############
   ECSRole:
     Type: "AWS::IAM::Role"
     Properties:
