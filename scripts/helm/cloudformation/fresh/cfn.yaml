@@ -476,7 +476,7 @@ Resources:
         Environment: 
         - 
           Name: "S3_BUCKET_ASSETS"
-          Value: !Ref S3Bucket2
+          Value: !Ref SessionAssetsBucket
         - 
           Name: "GROUP_CACHE"
           Value: "cache-all"
@@ -494,13 +494,13 @@ Resources:
           Value: "whatewer"
         - 
           Name: "S3_BUCKET_WEB"
-          Value: !Ref S3Bucket
+          Value: !Ref MobsBucket
         - 
           Name: "GROUP_ENDER"
           Value: "ender-all"
         - 
           Name: "MOBILE_IMAGES_BUCKET"
-          Value: !Ref S3Bucket5
+          Value: !Ref MobileAssetsBucket
         - 
           Name: "GROUP_SINK"
           Value: "sink-all"
@@ -809,20 +809,20 @@ Resources:
             Action:
             - s3:*
             Resource:
-            - !GetAtt S3Bucket.Arn
-            - !GetAtt S3Bucket2.Arn
-            - !GetAtt S3Bucket3.Arn
-            - !GetAtt S3Bucket4.Arn
-            - !GetAtt S3Bucket5.Arn
+            - !GetAtt MobsBucket.Arn
+            - !GetAtt SessionAssetsBucket.Arn
+            - !GetAtt StaticAssetsBucket.Arn
+            - !GetAtt SourceMapsBucket.Arn
+            - !GetAtt MobileAssetsBucket.Arn
           - Effect: Deny
             Action:
             - s3:*
             NotResource:
-            - !GetAtt S3Bucket.Arn
-            - !GetAtt S3Bucket2.Arn
-            - !GetAtt S3Bucket3.Arn
-            - !GetAtt S3Bucket4.Arn
-            - !GetAtt S3Bucket5.Arn
+            - !GetAtt MobsBucket.Arn
+            - !GetAtt SessionAssetsBucket.Arn
+            - !GetAtt StaticAssetsBucket.Arn
+            - !GetAtt SourceMapsBucket.Arn
+            - !GetAtt MobileAssetsBucket.Arn
   S3AccessUserKey:
     Type: AWS::IAM::AccessKey
     Properties:
@@ -903,7 +903,7 @@ Resources:
 # S3 bucket
 ##############
 # Because the name should be globally unique, we are generating a random number from the stack id.
-  S3Bucket:
+  MobsBucket:
     Type: "AWS::S3::Bucket"
     Properties:
       BucketName: !Join
@@ -943,7 +943,7 @@ Resources:
           AllowedOrigins: 
           - "*"
 
-  S3Bucket2:
+  SessionAssetsBucket:
     Type: "AWS::S3::Bucket"
     Properties:
       AccessControl: PublicRead
@@ -977,7 +977,7 @@ Resources:
           AllowedOrigins: 
           - "*"
 
-  S3Bucket3:
+  StaticAssetsBucket:
     Type: "AWS::S3::Bucket"
     Properties:
       WebsiteConfiguration: 
@@ -997,7 +997,7 @@ Resources:
                 - "/"
                 - !Ref "AWS::StackId"
 
-  S3Bucket4:
+  SourceMapsBucket:
     Type: "AWS::S3::Bucket"
     Properties:
       BucketName: !Join
@@ -1028,7 +1028,7 @@ Resources:
           - "HEAD"
           AllowedOrigins: 
           - "*"
-  S3Bucket5:
+  MobileAssetsBucket:
     Type: "AWS::S3::Bucket"
     Properties:
       BucketName: !Join
