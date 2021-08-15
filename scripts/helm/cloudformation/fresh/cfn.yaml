@@ -21,7 +21,6 @@ Metadata:
           - EmailSSLCert
           - EmailFrom
           - SiteURL
-          - AnnouncementURL
           - JWTSecret
 
 Parameters:
@@ -74,10 +73,6 @@ Parameters:
     Type: String
     Default: "https://openreplay.myinstance.com"
     AllowedPattern: "https://.+"
-  AnnouncementURL:
-    Description: Domain name for announcements
-    Type: String
-    Default: ""
   JWTSecret:
     Description: 16 character password to encrypt jwt secrets
     Type: String
@@ -342,7 +337,7 @@ Resources:
           Value: !Ref SiteURL
         -
           Name: "announcement_url"
-          Value: !Ref AnnouncementURL
+          Value: ""
         -
           Name: "jwt_secret"
           Value: !Ref JWTSecret
