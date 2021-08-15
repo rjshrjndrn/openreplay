@@ -173,7 +173,7 @@ Resources:
       - 
         Field: "path-pattern"
         Values: 
-        - "/http"
+        - "/ingest"
       Actions: 
       - 
         Type: "forward"
