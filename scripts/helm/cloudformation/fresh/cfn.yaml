@@ -1049,3 +1049,17 @@ Resources:
           ServerSideEncryptionByDefault: 
             SSEAlgorithm: "AES256"
           BucketKeyEnabled: false
+
+Outputs:
+  RDSConnectionString:
+    Description: "DB Connection string"
+    Value: !Sub "${RDSDBInstance.Endpoint.Address}"
+  RDSConnectionUser:
+    Description: "DB Connection User"
+    Value: !Sub "${RDSMasterUser}"
+  RDSConnectionPassword:
+    Description: "DB Connection Password"
+    Value: !Sub "${RDSMasterUserPassword}"
+  LoadBalancerEndPoint:
+    Description: "DNS Name to access openereplay"
+    Value: !GetAtt PublicLoadBalancer.DNSName
