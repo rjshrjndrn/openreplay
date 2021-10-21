@@ -29,13 +29,13 @@ env:
   EMAIL_SSL_CERT: "{{ email_ssl_cert }}"
   EMAIL_FROM: "{{ email_from }}"
   AWS_DEFAULT_REGION: "{{ aws_region }}"
-  sessions_region: "{{ aws_default_region }}"
+  sessions_region: "{{ aws_region }}"
   sessions_bucket: "{{ recordings_bucket }}"
   sourcemaps_bucket: "{{ sourcemaps_bucket }}"
   js_cache_bucket: "{{ assets_bucket }}"
   # In case of minio, the instance is running inside kuberntes,
   # which is accessible via nginx ingress.
-{% if s3_endpoint is "http://minio.db.svc.cluster.local:9000" %}
+{% if s3_endpoint == "http://minio.db.svc.cluster.local:9000" %}
   S3_HOST: "https://{{ domain_name }}"
 {% else %}
   S3_HOST: "{{ s3_endpoint }}"
