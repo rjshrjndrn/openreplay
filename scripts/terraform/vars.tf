@@ -17,9 +17,12 @@ variable "database_user_password" {
   description = "Postgres password"
 }
 
-# Generic
+variable "region" {
+  description = "region to run the tf against"
+}
+
 variable "environment" {
-  default = "env"
+  default = "dev"
 }
 variable "tags" {
   default = {

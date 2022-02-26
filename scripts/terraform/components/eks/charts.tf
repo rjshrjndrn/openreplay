@@ -22,7 +22,7 @@ resource "helm_release" "cluster_autoscaler" {
 
   set {
     name  = "awsRegion"
-    value = local.region
+    value = var.region
   }
 
   set {
@@ -93,7 +93,7 @@ resource "helm_release" "aws_node_termination_handler" {
 
   set {
     name  = "awsRegion"
-    value = local.region
+    value = var.region
   }
 
   set {
@@ -167,7 +167,7 @@ module "aws_node_termination_handler_sqs" {
 data "aws_iam_policy_document" "aws_node_termination_handler_sqs" {
   statement {
     actions   = ["sqs:SendMessage"]
-    resources = ["arn:aws:sqs:${local.region}:${data.aws_caller_identity.current.account_id}:${local.name}"]
+    resources = ["arn:aws:sqs:${var.region}:${data.aws_caller_identity.current.account_id}:${local.name}"]
 
     principals {
       type = "Service"

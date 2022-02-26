@@ -1,11 +1,9 @@
-provider "aws" {
-  region = local.region
-}
+provider "aws" { }
 
 locals {
-  name            = "ex-${replace(basename(path.cwd), "_", "-")}"
-  cluster_version = "1.21"
-  region          = "eu-west-1"
+  # name            = "ex-${replace(basename(path.cwd), "_", "-")}"
+  name            = var.eks_name
+  cluster_version = var.eks_cluster_version
 
   tags = {
     Example    = local.name
@@ -38,8 +36,8 @@ module "eks" {
   # Self Managed Node Group(s)
   self_managed_node_groups = {
     refresh = {
-      max_size     = 5
-      desired_size = 1
+      max_size     = var.eks_instance_max_count
+      desired_size = var.eks_instance_min_count
 
       instance_type = var.eks_instance_type
 
@@ -56,43 +54,9 @@ module "eks" {
 
       tags = { "aws-node-termination-handler/managed" = "true" }
     }
-
-    mixed_instance = {
-      use_mixed_instances_policy = true
-      mixed_instances_policy = {
-        instances_distribution = {
-          on_demand_base_capacity                  = 0
-          on_demand_percentage_above_base_capacity = 10
-          spot_allocation_strategy                 = "capacity-optimized"
-        }
-
-        override = [
-          {
-            instance_type     = "m5.large"
-            weighted_capacity = "1"
-          },
-          {
-            instance_type     = "m6i.large"
-            weighted_capacity = "2"
-          },
-        ]
-      }
-
-      tags = { "aws-node-termination-handler/managed" = "true" }
-    }
-
-    spot = {
-      instance_type = "m5.large"
-      instance_market_options = {
-        market_type = "spot"
-      }
-
-      bootstrap_extra_args = "--kubelet-extra-args '--node-labels=node.kubernetes.io/lifecycle=spot'"
-      tags                 = { "aws-node-termination-handler/managed" = "true" }
-    }
   }
 
-  tags = merge(local.tags, { Foo = "bar" })
+  tags = merge(local.tags, var.tags)
 }
 
 ################################################################################
@@ -149,40 +113,4 @@ resource "null_resource" "apply" {
     }
     command = self.triggers.cmd_patch
   }
-}
-
-################################################################################
-# Supporting Resources
-################################################################################
-
-module "vpc" {
-  source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 3.0"
-
-  name = local.name
-  cidr = "10.0.0.0/16"
-
-  azs             = ["${local.region}a", "${local.region}b", "${local.region}c"]
-  private_subnets = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
-  public_subnets  = ["10.0.4.0/24", "10.0.5.0/24", "10.0.6.0/24"]
-
-  enable_nat_gateway   = true
-  single_nat_gateway   = true
-  enable_dns_hostnames = true
-
-  enable_flow_log                      = true
-  create_flow_log_cloudwatch_iam_role  = true
-  create_flow_log_cloudwatch_log_group = true
-
-  public_subnet_tags = {
-    "kubernetes.io/cluster/${local.name}" = "shared"
-    "kubernetes.io/role/elb"              = 1
-  }
-
-  private_subnet_tags = {
-    "kubernetes.io/cluster/${local.name}" = "shared"
-    "kubernetes.io/role/internal-elb"     = 1
-  }
-
-  tags = local.tags
 }
