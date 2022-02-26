@@ -42,6 +42,12 @@ module "database" {
   database_subnet_group = module.vpc.database_subnet_group
 }
 
-output "test" {
-  value = module.vpc.vpc_id
+# module "efs" {
+#   
+# }
+
+module "eks" {
+  source = "./components/eks"
+  vpc_id = module.vpc.vpc_id
+  private_subnets = module.vpc.private_subnets
 }
