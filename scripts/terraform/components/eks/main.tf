@@ -1,4 +1,6 @@
-provider "aws" { }
+provider "aws" { 
+  region = var.region
+}
 
 locals {
   # name            = "ex-${replace(basename(path.cwd), "_", "-")}"
@@ -6,7 +8,7 @@ locals {
   cluster_version = var.eks_cluster_version
 
   tags = {
-    Example    = local.name
+    Name    = local.name
     GithubRepo = "terraform-aws-eks"
     GithubOrg  = "terraform-aws-modules"
   }
@@ -114,3 +116,24 @@ resource "null_resource" "apply" {
     command = self.triggers.cmd_patch
   }
 }
+
+  # Extend node-to-node security group rules
+  node_security_group_additional_rules = {
+    ingress_self_all = {
+      description = "Node to node all ports/protocols"
+      protocol    = "-1"
+      from_port   = 0
+      to_port     = 0
+      type        = "ingress"
+      self        = true
+    }
+    egress_all = {
+      description      = "Node all egress"
+      protocol         = "-1"
+      from_port        = 0
+      to_port          = 0
+      type             = "egress"
+      cidr_blocks      = ["0.0.0.0/0"]
+      ipv6_cidr_blocks = ["::/0"]
+    }
+  }
