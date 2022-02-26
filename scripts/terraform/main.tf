@@ -5,6 +5,10 @@
 #     key = "terraform"
 #   }
 # }
+terraform {
+  required_version = ">= 1.1.1"
+}
+
 provider "aws" {
   region = var.region
 }
@@ -61,6 +65,7 @@ module "database" {
   vpc_id = module.vpc.vpc_id
   vpc_cidr_block = module.vpc.vpc_cidr_block
   database_subnet_group = module.vpc.database_subnet_group
+  region = var.region
 }
 
 # module "efs" {
@@ -70,6 +75,7 @@ module "database" {
 module "eks" {
   source = "./components/eks"
   vpc_id = module.vpc.vpc_id
+  vpc_cidr_block = [var.cidr]
   private_subnets = module.vpc.private_subnets
   tags = var.tags
   region = var.region

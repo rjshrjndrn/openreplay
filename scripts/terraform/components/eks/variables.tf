@@ -1,6 +1,9 @@
 variable "vpc_id" {
   description = "vpc id"
 }
+variable "vpc_cidr_block" {
+  description = "cidr block"
+}
 variable "private_subnets" {
   description = "private subnets"
 }

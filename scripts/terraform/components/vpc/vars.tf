@@ -22,6 +22,9 @@ variable "public_subnets" {
 }
 
 # Generic
+variable "region" {
+  description = "aws region"
+}
 variable "environment" {
   default = "env"
 }

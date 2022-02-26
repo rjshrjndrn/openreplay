@@ -1,3 +1,7 @@
+provider "aws" {
+  region = var.region
+}
+
 locals {
   name = "openreplay-postgres-${var.environment}"
   tags = var.tags

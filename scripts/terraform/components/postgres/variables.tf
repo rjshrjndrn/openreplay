@@ -34,3 +34,6 @@ variable "vpc_cidr_block" {
 variable "database_subnet_group" {
   description = "database subnet group"
 }
+variable "region" {
+  description = "aws region"
+}
