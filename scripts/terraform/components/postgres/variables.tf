@@ -8,9 +8,6 @@ variable "database_name" {
 variable "database_user_name" {
   default = "openreplay"
 }
-variable "database_user_password" {
-  description = "Postgres password"
-}
 variable "environment" {
   description = "environment"
   default = "dev"

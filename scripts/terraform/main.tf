@@ -61,7 +61,6 @@ module "vpc" {
 
 module "database" {
   source = "./components/postgres"
-  database_user_password = var.database_user_password
   vpc_id = module.vpc.vpc_id
   vpc_cidr_block = module.vpc.vpc_cidr_block
   database_subnet_group = module.vpc.database_subnet_group
