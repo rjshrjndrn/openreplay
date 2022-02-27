@@ -14,6 +14,13 @@ variable "public_subnets" {
   default = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
 }
 
+variable "database_user_name" {
+  description = "username for postgres"
+}
+variable "database_user_password" {
+  description = "master password for postgres"
+}
+
 variable "region" {
   description = "region to run the tf against"
 }

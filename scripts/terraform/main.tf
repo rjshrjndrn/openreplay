@@ -65,6 +65,8 @@ module "database" {
   vpc_cidr_block = module.vpc.vpc_cidr_block
   database_subnet_group = module.vpc.database_subnet_group
   region = var.region
+  database_user_name = var.database_user_name
+  database_user_password = var.database_user_password
 }
 
 # module "efs" {
