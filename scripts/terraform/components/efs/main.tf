@@ -1,22 +1,53 @@
+locals {
+  name = "openreplay-postgres-${var.environment}"
+  tags = var.tags
+}
+
 # Creating EFS file system
 resource "aws_efs_file_system" "efs" {
-creation_token = "my-efs"
+creation_token = "openreplay-efs"
+lifecycle_policy {
+  transition_to_ia = "AFTER_30_DAYS"
+}
+
 tags = {
-  Name = "MyProduct"
+  Name = "openreplay-efs"
   }
 }
+
 # Creating Mount target of EFS
 resource "aws_efs_mount_target" "mount" {
+  # We can't directly iterate over list using for each.
+  # So creating a map
+  for_each = {
+    for subnet in var.subnet_id : subnet => subnet
+  }
   file_system_id = aws_efs_file_system.efs.id
-  subnet_id      = aws_instance.web.subnet_id
-  security_groups = [aws_security_group.ec2_security_group.id]
+  subnet_id      = each.value
+  security_groups = [module.security_group.security_group_id]
 }
-# Creating Mount Point for EFS
-resource "null_resource" "configure_nfs" {
-  depends_on = [aws_efs_mount_target.mount]
-  connection {
-    type     = "ssh"
-    user     = "ec2-user"
-    private_key = tls_private_key.my_key.private_key_pem
-    host     = aws_instance.web.public_ip
- }
+
+################################################################################
+# Supporting Resources
+################################################################################
+module "security_group" {
+  source  = "terraform-aws-modules/security-group/aws"
+  version = "~> 4.0"
+
+  name        = local.name
+  description = "PostgreSQL security group"
+  vpc_id      = var.vpc_id
+
+  # ingress
+  ingress_with_cidr_blocks = [
+    {
+      from_port   = 0
+      to_port     = 2049
+      protocol    = "tcp"
+      description = "efs access from within VPC"
+      cidr_blocks = var.vpc_cidr_block
+    },
+  ]
+
+  tags = merge(local.tags, var.tags)
+}

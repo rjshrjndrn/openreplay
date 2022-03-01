@@ -69,9 +69,14 @@ module "database" {
   database_user_password = var.database_user_password
 }
 
-# module "efs" {
-#   
-# }
+module "efs" {
+  source = "./components/efs"
+  tags = var.tags
+  subnet_id = module.vpc.private_subnets
+  vpc_id = module.vpc.vpc_id
+  vpc_cidr_block = module.vpc.vpc_cidr_block
+  environment = var.environment
+}
 
 module "eks" {
   source = "./components/eks"
