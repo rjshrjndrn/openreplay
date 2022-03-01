@@ -12,6 +12,19 @@ provider "helm" {
 # https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler
 ################################################################################
 
+# This is related to efs
+resource "helm_release" "efs_provisioner" {
+  name             = "efs-provisioner"
+  namespace        = "kube-system"
+  repository       = "https://kubernetes-sigs.github.io/aws-efs-csi-driver"
+  chart            = "aws-efs-csi-driver"
+  create_namespace = false
+  depends_on = [
+    module.eks.cluster_id,
+    null_resource.apply,
+  ]
+}
+
 resource "helm_release" "cluster_autoscaler" {
   name             = "cluster-autoscaler"
   namespace        = "kube-system"
