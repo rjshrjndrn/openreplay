@@ -17,14 +17,13 @@ tags = {
 
 # Creating Mount target of EFS
 resource "aws_efs_mount_target" "mount" {
-  # We can't directly iterate over list using for each.
-  # So creating a map
-  for_each = {
-    for subnet in var.subnet_id : subnet => subnet
-  }
+  count = length(var.subnet_id)
   file_system_id = aws_efs_file_system.efs.id
-  subnet_id      = each.value
+  subnet_id      = var.subnet_id[count.index]
   security_groups = [module.security_group.security_group_id]
+  depends_on = [
+    var.subnet_id,
+  ]
 }
 
 ################################################################################
