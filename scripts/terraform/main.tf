@@ -82,3 +82,13 @@ module "eks" {
   region = var.region
   eks_name = local.eks_name
 }
+
+module "msk" {
+  source = "./components/msk"
+  number_of_broker_nodes = length(module.vpc.private_subnets)
+  msk_client_subnets = module.vpc.private_subnets
+  msk_vpc_id = module.vpc.vpc_id
+  msk_vpc_cidr_block = module.vpc.vpc_cidr_block
+  tags = var.tags
+  environment = var.environment
+}
