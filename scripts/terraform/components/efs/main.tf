@@ -7,9 +7,9 @@ locals {
 resource "aws_efs_file_system" "efs" {
 creation_token = "openreplay-efs"
 lifecycle_policy {
-  transition_to_ia = "AFTER_30_DAYS"
+  transition_to_ia = "AFTER_7_DAYS"
 }
-
+performance_mode = "maxIO"
 tags = {
   Name = "openreplay-efs"
   }
