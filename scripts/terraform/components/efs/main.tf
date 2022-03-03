@@ -1,5 +1,5 @@
 locals {
-  name = "openreplay-postgres-${var.environment}"
+  name = "openreplay-efs-${var.environment}"
   tags = var.tags
 }
 
@@ -34,7 +34,7 @@ module "security_group" {
   version = "~> 4.0"
 
   name        = local.name
-  description = "PostgreSQL security group"
+  description = "EFS security group"
   vpc_id      = var.vpc_id
 
   # ingress
