@@ -86,6 +86,7 @@ module "eks" {
   tags = var.tags
   region = var.region
   eks_name = local.eks_name
+  efs_id = module.efs.aws_efs_file_system_id
 }
 
 module "msk" {

@@ -31,3 +31,6 @@ variable "eks_name" {
 variable "region" {
   description = "aws region"
 }
+variable "efs_id" {
+  description = "efs id for provisioning"
+}

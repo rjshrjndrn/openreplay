@@ -5,6 +5,31 @@ provider "helm" {
     token                  = data.aws_eks_cluster_auth.cluster.token
   }
 }
+terraform {
+required_providers {
+    kubectl = {
+      source  = "gavinbunney/kubectl"
+      version = ">= 1.7.0"
+    }
+  }
+}
+
+# Provisioning efs provider
+provider "kubectl" {
+    load_config_file       = false
+    host                   = module.eks.cluster_endpoint
+    cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+    token                  = data.aws_eks_cluster_auth.cluster.token
+}
+
+data "kubectl_file_documents" "docs" {
+    content = templatefile("${path.module}/efs.yaml", {efs_id = var.efs_id }) 
+}
+
+resource "kubectl_manifest" "efs_provisioner" {
+    for_each  = data.kubectl_file_documents.docs.manifests
+    yaml_body = each.value
+}
 
 ################################################################################
 # Cluster Autoscaler
