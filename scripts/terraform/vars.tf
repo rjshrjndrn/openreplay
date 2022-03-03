@@ -21,6 +21,16 @@ variable "database_user_password" {
   description = "master password for postgres"
 }
 
+variable "s3_buckets" {
+  description = "prefix of the bucket to create"
+  type = map
+  default = {
+    "openreplay-recordings" = "private"
+    "openreplay-assets" = "public-read"
+    "openreplay-sourcemaps" = "private"
+  }
+}
+
 variable "region" {
   description = "region to run the tf against"
 }

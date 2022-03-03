@@ -12,3 +12,13 @@ output "efs_id" {
   value = module.efs.aws_efs_file_system_id
   description = "efs file system id"
 }
+
+output "s3_buckets" {
+  description = "s3 buckets to store assets"
+  value = { for k,v in module.s3 : k => v }
+}
+
+output "iam_key" {
+  description = "IAM user Access key"
+  value = module.iam.aws_iam_access_key
+}

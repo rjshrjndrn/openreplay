@@ -97,3 +97,16 @@ module "msk" {
   tags = var.tags
   environment = var.environment
 }
+
+module "s3" {
+  for_each = var.s3_buckets
+  source = "./components/s3"
+  bucket_prefix = each.key
+  bucket_acl = each.value
+}
+
+module "iam" {
+  source = "./components/iam"
+  environment = var.environment
+  bucket_name = module.s3
+}
