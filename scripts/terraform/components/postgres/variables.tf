@@ -1,6 +1,6 @@
 # Databases
 variable "database_instance_type" {
-  default = "db.m5.xlarge"
+  default = "db.m6g.xlarge"
 }
 variable "database_name" {
   default = "openreplay"
