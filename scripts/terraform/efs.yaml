@@ -18,13 +18,13 @@ spec:
   storageClassName: efs-sc
   csi:
     driver: efs.csi.aws.com
-    volumeHandle: fs-0ddb3d8c6aedb6a62
+    volumeHandle: fs-0835920a2da1dccb0
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: openreplay-efs-claim
-  namespce: app
+  namespace: app
 spec:
   accessModes:
     - ReadWriteMany
