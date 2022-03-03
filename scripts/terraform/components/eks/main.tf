@@ -73,7 +73,7 @@ module "eks" {
       from_port        = 0
       to_port          = 0
       type             = "egress"
-      cidr_blocks = var.vpc_cidr_block
+      cidr_blocks = ["0.0.0.0/0"]
       ipv6_cidr_blocks = []
     }
   }
