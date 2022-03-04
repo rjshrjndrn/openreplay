@@ -23,12 +23,17 @@ provider "kubectl" {
 }
 
 data "kubectl_file_documents" "docs" {
-    content = templatefile("${path.module}/efs.yaml", {efs_id = var.efs_id }) 
+    content = templatefile("${path.module}/efs.yaml", {efs_id = var.efs_id })
 }
 
 resource "kubectl_manifest" "efs_provisioner" {
     for_each  = data.kubectl_file_documents.docs.manifests
     yaml_body = each.value
+    depends_on = [
+      data.kubectl_file_documents.docs,
+      module.eks.cluster_id,
+      null_resource.apply,
+    ]
 }
 
 ################################################################################
