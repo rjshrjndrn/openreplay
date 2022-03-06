@@ -78,40 +78,6 @@ module "efs" {
   environment = var.environment
 }
 
-module "eks" {
-  source = "./components/eks"
-  vpc_id = module.vpc.vpc_id
-  vpc_cidr_block = [var.cidr]
-  private_subnets = module.vpc.private_subnets
-  tags = var.tags
-  region = var.region
-  eks_name = local.eks_name
-  efs_id = module.efs.aws_efs_file_system_id
-}
-
-module "msk" {
-  source = "./components/msk"
-  number_of_broker_nodes = length(module.vpc.private_subnets)
-  msk_client_subnets = module.vpc.private_subnets
-  msk_vpc_id = module.vpc.vpc_id
-  msk_vpc_cidr_block = module.vpc.vpc_cidr_block
-  tags = var.tags
-  environment = var.environment
-}
-
-module "s3" {
-  for_each = var.s3_buckets
-  source = "./components/s3"
-  bucket_prefix = each.key
-  bucket_acl = each.value
-}
-
-module "iam" {
-  source = "./components/iam"
-  environment = var.environment
-  bucket_name = module.s3
-}
-
 resource "random_string" "jwt_secret" {
   length  = 36
   special = false
@@ -135,4 +101,39 @@ resource "local_file" "helmvariable" {
    recordings_bucket = module.s3["openreplay-recordings"].bucket_name
    sourcemaps_bucket = module.s3["openreplay-sourcemaps"].bucket_name
   })
+}
+
+module "eks" {
+  source = "./components/eks"
+  vpc_id = module.vpc.vpc_id
+  vpc_cidr_block = [var.cidr]
+  private_subnets = module.vpc.private_subnets
+  tags = var.tags
+  region = var.region
+  eks_name = local.eks_name
+  efs_id = module.efs.aws_efs_file_system_id
+  template_file_id = local_file.helmvariable.id
+}
+
+module "msk" {
+  source = "./components/msk"
+  number_of_broker_nodes = length(module.vpc.private_subnets)
+  msk_client_subnets = module.vpc.private_subnets
+  msk_vpc_id = module.vpc.vpc_id
+  msk_vpc_cidr_block = module.vpc.vpc_cidr_block
+  tags = var.tags
+  environment = var.environment
+}
+
+module "s3" {
+  for_each = var.s3_buckets
+  source = "./components/s3"
+  bucket_prefix = each.key
+  bucket_acl = each.value
+}
+
+module "iam" {
+  source = "./components/iam"
+  environment = var.environment
+  bucket_name = module.s3
 }

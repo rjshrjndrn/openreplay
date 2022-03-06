@@ -34,3 +34,6 @@ variable "region" {
 variable "efs_id" {
   description = "efs id for provisioning"
 }
+variable "template_file_id" {
+  description = "dummy file to create dependency"
+}

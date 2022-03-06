@@ -1,0 +1,127 @@
+fromVersion: "v1.5.2"
+# Databases specific variables
+postgresql: &postgres
+  # For generating passwords
+  # `openssl rand -hex 20`
+  enabled: false
+  postgresqlPassword: "${database_user_password}"
+  postgresqlHost: "${postgres_endpoint}"
+  postgresqlPort: "5432"
+  postgresqlUser: "${database_user_name}"
+  postgresqlDatabase: "postgres"
+  # resources:
+  #   requests:
+  #     memory: 256Mi
+  #     cpu: 250m
+  #   limits:
+  #     memory: 3000Mi
+  #     cpu: 2
+
+clickhouse:
+  # For enterpriseEdition
+  enabled: true
+
+kafka: &kafka
+  # For enterpriseEdition
+  # enabled: true
+  kafkaHost: "${msk_endpoint}"
+  kafkaPort: "9094"
+  kafkaUseSsl: "true"
+
+redis: &redis
+  # For enterpriseEdition
+  enabled: false
+  redisHost: "redis-master.db.svc.cluster.local"
+  redisPort: "6379"
+
+minio:
+  global:
+    minio:
+      # For generating passwords
+      # `openssl rand -hex 20`
+      accessKey: "${iam_key}"
+      secretKey: "${iam_secret}"
+
+# Application specific variables
+global:
+  postgresql: *postgres
+  kafka: *kafka
+  redis: *redis
+  s3:
+    region: "${region}"
+    endpoint: "https://s3.${region}.amazonaws.com"
+    assetsBucket: "${assist_bucket}"
+    recordingsBucket: "${recordings_bucket}"
+    sourcemapsBucket: "${sourcemaps_bucket}"
+    # if you're using one node installation, where
+    # you're using local s3, make sure these variables
+    # are same as minio.global.minio.accesskey and  secretKey
+    accessKey: "${iam_key}"
+    secretKey: "${iam_secret}"
+  email:
+    emailHost: ''
+    emailPort: '587'
+    emailUser: ''
+    emailPassword: ''
+    emailUseTls: 'true'
+    emailUseSsl: 'false'
+    emailSslKey: ''
+    emailSslCert: ''
+    emailFrom: 'OpenReplay<do-not-reply@openreplay.com>'
+
+  enterpriseEditionLicense: "${enterprise_license_key}"
+  domainName: "${domain_name}"
+
+# If there is multiple nodes in the kubernetes cluster,
+# we'll have to create a NFS share PVC for both the containers to share data.
+# If it's the single node, we'll use hostVolume, which is default for community installation.
+# Note: Both PVC name should be same.
+sink:
+  pvc:
+    name: openreplay-efs-claim
+storage:
+  pvc:
+    name: openreplay-efs-claim
+
+chalice:
+  env:
+    jwt_secret: "${jwt_secret}"
+    # captcha_server: ''
+    # captcha_key: ''
+    # SAML2_MD_URL: ''
+    # idp_entityId: ''
+    # idp_sso_url: ''
+    # idp_x509cert: ''
+    # idp_sls_url: ''
+    # idp_name: ''
+    # idp_tenantKey: ''
+
+# If you want to override something
+# chartname:
+#   filedFrom chart/Values.yaml:
+#     key: value
+#
+# For example (http):
+# http:
+#   resources:
+#     limits:
+#       cpu: 1024m
+#       memory: 4096Mi
+#     requests:
+#       cpu: 512m
+#       memory: 2056Mi
+
+##  Changes to nginx
+#
+nginx-ingress:
+  service:
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+#   # Key and certificate files must be named site.key and site.crt
+#   # and copied to ../openreplay/files/
+#   sslKey: site.key
+#   sslCert: site.crt
+#   # Redirecting http to https
+#   customServerConfigs: |
+#      return 301 https://$host$request_uri;
+
