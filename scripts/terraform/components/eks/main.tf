@@ -1,3 +1,4 @@
+# vim: fdm=indent:
 provider "aws" { 
   region = var.region
 }
@@ -34,6 +35,10 @@ module "eks" {
 
   vpc_id     = var.vpc_id
   subnet_ids = var.private_subnets
+
+  eks_managed_node_groups = {
+
+  }
 
   # Self Managed Node Group(s)
   self_managed_node_groups = {

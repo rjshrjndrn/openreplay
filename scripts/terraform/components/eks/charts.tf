@@ -44,7 +44,7 @@ resource "kubectl_manifest" "efs_provisioner" {
 
 # This is related to efs
 resource "helm_release" "efs_provisioner" {
-  name             = "efs-provisioner"
+  name             = "aws-efs-csi-driverr"
   namespace        = "kube-system"
   repository       = "https://kubernetes-sigs.github.io/aws-efs-csi-driver"
   chart            = "aws-efs-csi-driver"

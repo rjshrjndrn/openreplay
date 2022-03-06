@@ -111,3 +111,28 @@ module "iam" {
   environment = var.environment
   bucket_name = module.s3
 }
+
+resource "random_string" "jwt_secret" {
+  length  = 36
+  special = false
+  upper   = false
+}
+
+resource "local_file" "helmvariable" {
+  filename = "testvars.yaml"
+  content = templatefile("vars.yaml", {
+   database_user_password = var.database_user_password 
+   region = var.region
+   postgres_endpoint = split(":",module.database.db_instance_endpoint)[0]
+   database_user_name = var.database_user_name
+   msk_endpoint = split(":",module.msk.msk_endpoint)[0]
+   iam_key = module.iam.aws_iam_access_key
+   iam_secret = module.iam.aws_iam_access_secret
+   enterprise_license_key = var.enterprise_license_key
+   domain_name = var.domain_name
+   jwt_secret = random_string.jwt_secret.result
+   assist_bucket = module.s3["openreplay-assets"].bucket_name
+   recordings_bucket = module.s3["openreplay-recordings"].bucket_name
+   sourcemaps_bucket = module.s3["openreplay-sourcemaps"].bucket_name
+  })
+}

@@ -46,6 +46,13 @@ variable "tags" {
   }
 }
 
+variable "domain_name" {
+  description = "domain name of openreplay installation"
+}
+variable "enterprise_license_key" {
+  description = "lincense key for enterprise installation"
+}
+
 
 ## Output
 
