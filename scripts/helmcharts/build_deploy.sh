@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+test
+
 # This script will build and push docker image to registry
 
 # Usage: IMAGE_TAG=latest DOCKER_REPO=rg.fr-par.scw.cloud/foss bash build_deploy.sh
