@@ -7,6 +7,8 @@
   </a>
 </p>
 
+
+
 <h3 align="center">Session replay for developers</h3>
 <p align="center">The most advanced open-source session replay for building delightful web apps.</p>
 
