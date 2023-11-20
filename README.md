@@ -1,4 +1,4 @@
-### OR
+### openreplay
 <p align="center">
   <a href="https://openreplay.com/#gh-light-mode-only">
     <img src="static/openreplay-git-banner-light.png" width="100%">
